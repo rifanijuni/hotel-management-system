@@ -18,7 +18,7 @@ string hotel[3][5] = {
     {"KOSONG","KOSONG","KOSONG","KOSONG","KOSONG"}
 };
 
-const int maxTamu = 100;
+const int maxTamu = 15;
 Tamu tamu[maxTamu];
 int jumlahTamu = 0;
 
@@ -28,7 +28,7 @@ void bookingKamar();
 void cariTamu();
 void laporan();
 void loadFile();
-void saveFile();
+bool saveFile(Tamu* t);
 void totalPendapatan();
 int hitungBiaya(int hari, int harga);
 void printData(Tamu* t);
@@ -120,6 +120,13 @@ string underscoreToSpasi(string teks) {
     return teks;
 }
 
+string stringToupper(string text){
+    for(char& word : text){
+        word = (char)toupper(word);
+    }
+    return text;
+}
+
 char getAbjadKamar(int index) {
     string abjad = "ABCDE";
     return abjad[index];
@@ -132,7 +139,7 @@ int getIndexKamar(char huruf) {
             return i;
         }
     }
-    return 0; 
+    return -1; 
 }
 
 void printData(Tamu* t) {
@@ -168,23 +175,58 @@ void bookingKamar(){
     header();
     cout << "\n------------------- Booking Kamar -------------------\n\n";
     
+    if (jumlahTamu >= maxTamu) {
+        cout << "Maaf, kapasitas tamu penuh (maksimal " << maxTamu <<" tamu)!\n";
+        system("pause");
+        return; 
+    }
+
     Tamu inputTamu;
     string noKamar;
 
     cout << "Data tamu :\n";
+    cout << "--------------------------------------------------\n";
     cout << "ID : "; cin >> inputTamu.id;
     cout << "Nama : "; cin.ignore(); getline(cin, inputTamu.nama); 
-    cout << "Nomor Kamar : "; cin >> noKamar;
+    
+    bool kamarValid = false;
+    do {
+        cout << "Nomor Kamar (Contoh: 1A): "; 
+        cin >> noKamar;
+
+        if (noKamar.length() != 2) {
+            cout << "Format salah harus 2 karakter (Contoh: 1A).\n";
+            continue; 
+        }
+
+        inputTamu.lantai = noKamar[0] - '1';
+        inputTamu.kamar = getIndexKamar(noKamar[1]);
+
+        if (inputTamu.lantai < 0 || inputTamu.lantai > 2 || inputTamu.kamar == -1 || toupper(noKamar[1]) > 'E') {
+            cout << "Kamar tidak ada! Pilih lantai 1-3 dan abjad A-E.\n";
+            continue;
+        }
+
+        if (hotel[inputTamu.lantai][inputTamu.kamar] == "TERISI") {
+            cout << "Kamar " << noKamar << " sudah terisi! Silakan pilih yang kosong.\n";
+            continue;
+        }
+        kamarValid = true;
+
+    }while (kamarValid == false);
+    
     cout << "Lama Inap : "; cin >> inputTamu.lamaInap;
 
-    inputTamu.lantai = noKamar[0] - '1';
-    inputTamu.kamar = getIndexKamar(noKamar[1]);
+    if (saveFile(&inputTamu) == true) {
+        tamu[jumlahTamu] = inputTamu;
+        hotel[inputTamu.lantai][inputTamu.kamar] = "TERISI";
+        jumlahTamu++;
+        cout << "Berhasil booking kamar\n";
+    } else {
+        cout << "Gagal booking kamar\n";
+    }
 
-    tamu[jumlahTamu] = inputTamu;
-    hotel[inputTamu.lantai][inputTamu.kamar] = "TERISI";
-    jumlahTamu++;
-
-    cout << "Berhasil booking kamar\n";
+    cout << "--------------------------------------------------\n\n";
     system("pause");
 }
 
@@ -209,7 +251,7 @@ void cariTamu(){
 	
 	bool ditemukan = false;
     for (int i = 0; i < jumlahTamu; i++) {
-        if (tamu[i].nama == keyword) {
+        if (stringToupper(tamu[i].nama) == stringToupper(keyword)) {
             cout << "\nData Ditemukan!\n";
             printData(&tamu[i]);
             ditemukan = true;
@@ -219,6 +261,7 @@ void cariTamu(){
     if (!ditemukan) {
         cout << "Data dengan nama " << keyword << " tidak ditemukan.\n";
     }
+    cout << "--------------------------------------------------\n\n";
     system("pause");
 }
 
@@ -239,8 +282,10 @@ void laporan(){
     for (int i = 0; i < jumlahTamu; i++) {
         printData(&tamu[i]);
     }
-    
-    totalPendapatan();
+
+    cout << "--------------------------------------------------\n";
+    cout << "Total Tamu : " << jumlahTamu << " orang" << endl;
+    cout << "--------------------------------------------------\n\n";
     system("pause");
 }
 
@@ -267,18 +312,36 @@ int hitungBiaya(int hari, int harga) {
 }
 
 void totalPendapatan() {
-    cout << "--------------------------------------------------\n\n";
+    header();
+    cout << "\n------------------- Total Pendapatan -------------------\n\n";
+
+    if (jumlahTamu == 0) {
+        cout << "Data tamu kosong. Belum ada pendapatan\n";
+        system("pause");
+        return;
+    }
 
     int hargaPerMalam = 300000;
     int total = 0;
 
+    cout << "Rincian pendapatan per tamu:\n";
+    cout << "--------------------------------------------------\n";
+
     for(int i = 0; i < jumlahTamu; i++) {
-        total += hitungBiaya(tamu[i].lamaInap, hargaPerMalam);
+        int biayaTamu = hitungBiaya(tamu[i].lamaInap, hargaPerMalam);
+        total += biayaTamu;
+
+        cout << i + 1 << ". " 
+            << tamu[i].nama 
+            << " - " << tamu[i].lamaInap << " malam : Rp " << biayaTamu << "\n";
     }
 
+    cout << "--------------------------------------------------\n";
     cout << "Total Tamu : " << jumlahTamu << " orang" << endl;
     cout << "Total Pendapatan : Rp " << total << endl;
+    cout << "Rata-rata/Tamu   : Rp " << (total / jumlahTamu) << endl;
     cout << "--------------------------------------------------\n\n";
+    system("pause");
 }
 
 /**
@@ -289,35 +352,32 @@ void loadFile() {
 	if (file.is_open()){
 		cout << "File ditemukan. Memuat data...\n";
 		while (jumlahTamu < maxTamu && file >> tamu[jumlahTamu].id >> tamu[jumlahTamu].nama >> tamu[jumlahTamu].lantai >> tamu[jumlahTamu].kamar >> tamu[jumlahTamu].lamaInap) {
-			tamu[jumlahTamu].id = tamu[jumlahTamu].id;
-			tamu[jumlahTamu].nama = underscoreToSpasi(tamu[jumlahTamu].nama);
-			tamu[jumlahTamu].lantai = tamu[jumlahTamu].lantai;
-			tamu[jumlahTamu].kamar = tamu[jumlahTamu].kamar;
-			tamu[jumlahTamu].lamaInap = tamu[jumlahTamu].lamaInap;
-			jumlahTamu++;
-		}
+            
+            tamu[jumlahTamu].nama = underscoreToSpasi(tamu[jumlahTamu].nama);
+            hotel[tamu[jumlahTamu].lantai][tamu[jumlahTamu].kamar] = "TERISI";
+            
+            jumlahTamu++;
+        }
 		file.close();
-		system("pause");
 	} else {
 		cout << "File tidak ditemukan! Memulai program dengan data kosong\n";
-		system("pause");
 	}
+    system("pause");
 }
 
-void saveFile() {
+bool saveFile(Tamu* t) {
     ofstream file("data_tamu.txt", ios::app);
 
-    for(int i = 0; i < jumlahTamu; i++) {
-        file << tamu[i].id << " "
-            << spasiToUnderscore(tamu[i].nama) << " "
-            << tamu[i].lantai << " "
-            << tamu[i].kamar << " "
-            << tamu[i].lamaInap
+    if(!file.is_open()){
+		return false;
+	} else {
+        file << t->id << " "
+            << spasiToUnderscore(t->nama) << " "
+            << t->lantai << " "
+            << t->kamar << " "
+            << t->lamaInap
             << endl;
+        file.close();
+        return true;
     }
-
-    file.close();
-    jumlahTamu++;
-    cout << "Data berhasil disimpan!\n";
-    system("pause");
 }
