@@ -1,5 +1,7 @@
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <cctype>
 using namespace std;
 
 struct Tamu {
@@ -29,10 +31,16 @@ void loadFile();
 void saveFile();
 void totalPendapatan();
 int hitungBiaya(int hari, int harga);
+void printData(Tamu* t);
+void bubbleSort();
 string spasiToUnderscore(string teks);
 string underscoreToSpasi(string teks);
+string stringToupper(string text);
 
 int main() {
+    system("cls");
+    loadFile();
+
     int pilih;
     char out;
     bool keluar = false;
@@ -110,10 +118,35 @@ string underscoreToSpasi(string teks) {
     return teks;
 }
 
+void printData(Tamu* t) {
+    string abjadKamar = "ABCDE";
+    string noKamar;
+    for (int i = 0; i < 5; i++){
+        noKamar = abjadKamar[t->kamar];
+    }
+
+    cout << "--------------------------------------------------\n"
+		<< "ID          : " << t->id << "\n"
+		<< "Nama        : " << t->nama << "\n"
+        << "Lantai      : " << t->lantai << "\n"
+        << "Kamar       : " << noKamar << "\n"
+        << "Lama Inap   : " << t->lamaInap << "\n";
+}
+
 void lihatKamar(){
     header();
-    cout << "\n------------------- Lihat Kamar -------------------\n";
+    cout << "\n------------------- Lihat Kamar -------------------\n\n";
 
+    string abjadKamar = "ABCDE";
+
+    for (int i = 0; i < 3; i++){
+        for (int j = 0; j < 5; j++){
+            cout << "[Kamar " << i+1 << abjadKamar[j] << " " << hotel[i][j] << "]";
+        }
+        cout << endl;
+    }
+
+    cout << endl;
     system("pause");
 }
 
@@ -122,7 +155,32 @@ void lihatKamar(){
  */
 void bookingKamar(){
     header();
+    cout << "\n------------------- Booking Kamar -------------------\n\n";
     
+    Tamu inputTamu;
+    string noKamar;
+
+    cout << "Data tamu :\n";
+    cout << "ID : "; cin >> inputTamu.id;
+    cout << "Nama : "; cin.ignore(); getline(cin, inputTamu.nama); 
+    cout << "Nomor Kamar : "; cin >> noKamar;
+    cout << "Lama Inap : "; cin >> inputTamu.lamaInap;
+
+    inputTamu.lantai = noKamar[0] - '1';
+
+    string abjadKamar = "ABCDE";
+    for (int i = 0; i < 5; i++){
+        if (abjadKamar[i] == toupper(noKamar[1])){
+            inputTamu.kamar = i;
+        }
+    }
+
+    tamu[jumlahTamu] = inputTamu;
+    hotel[inputTamu.lantai][inputTamu.kamar] = "TERISI";
+    jumlahTamu++;
+
+    cout << "Berhasil booking kamar\n";
+    system("pause");
 }
 
 /**
@@ -130,15 +188,69 @@ void bookingKamar(){
  */
 void cariTamu(){
     header();
+    cout << "\n------------------- Cari Data Tamu -------------------\n\n";
+
+    if (jumlahTamu == 0) {
+        cout << "Data tamu kosong. Tidak ada data yang bisa dicari. Silakan booking kamar\n";
+        return;
+    }
     
+	string keyword;
+	cout << "Masukkan nama :"; 
+    cin.ignore(); 
+    getline(cin, keyword);
+	
+	cout << "\nHasil Pencarian:\n";
+	
+	bool ditemukan = false;
+    for (int i = 0; i < jumlahTamu; i++) {
+        if (tamu[i].nama == keyword) {
+            cout << "\nData Ditemukan!\n";
+            printData(&tamu[i]);
+            ditemukan = true;
+            break;
+        }
+    }
+    if (!ditemukan) {
+        cout << "Data dengan nama " << keyword << " tidak ditemukan.\n";
+    }
+    system("pause");
 }
+
+
 
 /**
  * Sorting Data
  */
 void laporan(){
     header();
+    cout << "\n------------------- Laporan Data Tamu -------------------\n\n";
     
+    if (jumlahTamu == 0) {
+        cout << "Data tamu kosong.\n";
+        system("pause");
+        return;
+    }
+
+    bubbleSort();
+    for (int i = 0; i < jumlahTamu; i++) {
+        printData(&tamu[i]);
+    }
+    
+    totalPendapatan();
+    system("pause");
+}
+
+void bubbleSort() {
+    for (int i = 0; i < jumlahTamu - 1; i++) {
+        for (int j = 0; j < jumlahTamu - i - 1; j++) {
+            if (tamu[j].id > tamu[j + 1].id) {
+                Tamu temp = tamu[j];
+                tamu[j] = tamu[j + 1];
+                tamu[j + 1] = temp;
+            }
+        }
+    }
 }
 
 /**
@@ -153,7 +265,7 @@ int hitungBiaya(int hari, int harga) {
 }
 
 void totalPendapatan() {
-    header();
+    cout << "--------------------------------------------------\n\n";
 
     int hargaPerMalam = 300000;
     int total = 0;
@@ -164,7 +276,7 @@ void totalPendapatan() {
 
     cout << "Total Tamu : " << jumlahTamu << " orang" << endl;
     cout << "Total Pendapatan : Rp " << total << endl;
-    system("pause");
+    cout << "--------------------------------------------------\n\n";
 }
 
 /**
