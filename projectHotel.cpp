@@ -36,6 +36,8 @@ void bubbleSort();
 string spasiToUnderscore(string teks);
 string underscoreToSpasi(string teks);
 string stringToupper(string text);
+char getAbjadKamar(int index);
+int getIndexKamar(char huruf);
 
 int main() {
     system("cls");
@@ -118,12 +120,23 @@ string underscoreToSpasi(string teks) {
     return teks;
 }
 
-void printData(Tamu* t) {
-    string abjadKamar = "ABCDE";
-    string noKamar;
-    for (int i = 0; i < 5; i++){
-        noKamar = abjadKamar[t->kamar];
+char getAbjadKamar(int index) {
+    string abjad = "ABCDE";
+    return abjad[index];
+}
+
+int getIndexKamar(char huruf) {
+    string abjad = "ABCDE";
+    for (int i = 0; i < 5; i++) {
+        if (abjad[i] == toupper(huruf)) {
+            return i;
+        }
     }
+    return 0; 
+}
+
+void printData(Tamu* t) {
+    char noKamar = getAbjadKamar(t->kamar);
 
     cout << "--------------------------------------------------\n"
 		<< "ID          : " << t->id << "\n"
@@ -137,11 +150,9 @@ void lihatKamar(){
     header();
     cout << "\n------------------- Lihat Kamar -------------------\n\n";
 
-    string abjadKamar = "ABCDE";
-
     for (int i = 0; i < 3; i++){
         for (int j = 0; j < 5; j++){
-            cout << "[Kamar " << i+1 << abjadKamar[j] << " " << hotel[i][j] << "]";
+            cout << "[Kamar " << i+1 << getAbjadKamar(j) << " " << hotel[i][j] << "]";
         }
         cout << endl;
     }
@@ -167,13 +178,7 @@ void bookingKamar(){
     cout << "Lama Inap : "; cin >> inputTamu.lamaInap;
 
     inputTamu.lantai = noKamar[0] - '1';
-
-    string abjadKamar = "ABCDE";
-    for (int i = 0; i < 5; i++){
-        if (abjadKamar[i] == toupper(noKamar[1])){
-            inputTamu.kamar = i;
-        }
-    }
+    inputTamu.kamar = getIndexKamar(noKamar[1]);
 
     tamu[jumlahTamu] = inputTamu;
     hotel[inputTamu.lantai][inputTamu.kamar] = "TERISI";
@@ -217,8 +222,6 @@ void cariTamu(){
     system("pause");
 }
 
-
-
 /**
  * Sorting Data
  */
@@ -256,7 +259,6 @@ void bubbleSort() {
 /**
  * Rekursif hitung pendapatan
  */
-
 int hitungBiaya(int hari, int harga) {
     if(hari <= 0)
         return 0;
