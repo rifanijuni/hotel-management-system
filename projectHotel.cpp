@@ -194,7 +194,21 @@ void bookingKamar(){
 
     cout << "Data tamu :\n";
     cout << "--------------------------------------------------\n";
-    cout << "ID : "; cin >> inputTamu.id;
+
+    bool idDuplikat;
+    do {
+        idDuplikat = false;
+        cout << "ID : "; cin >> inputTamu.id;
+        
+        for(int i = 0; i < jumlahTamu; i++) {
+            if(tamu[i].id == inputTamu.id) {
+                cout << "Maaf, ID " << inputTamu.id << " sudah terdaftar! Silakan input ID lain.\n";
+                idDuplikat = true;
+                break; 
+            }
+        }
+    } while (idDuplikat == true);
+
     cout << "Nama : "; cin.ignore(); getline(cin, inputTamu.nama); 
     
     bool kamarValid = false;
@@ -305,16 +319,15 @@ void cariTamu(){
         return;
     }
     
-	string keyword;
-	cout << "Masukkan nama :"; 
-    cin.ignore(); 
-    getline(cin, keyword);
+	int keyword;
+	cout << "Masukkan ID :"; 
+    cin >> keyword;
 	
 	cout << "\nHasil Pencarian:\n";
 	
 	bool ditemukan = false;
     for (int i = 0; i < jumlahTamu; i++) {
-        if (stringToupper(tamu[i].nama) == stringToupper(keyword)) {
+        if (tamu[i].id == keyword) {
             cout << "\nData Ditemukan!\n";
             printData(&tamu[i]);
             ditemukan = true;
@@ -322,7 +335,7 @@ void cariTamu(){
         }
     }
     if (!ditemukan) {
-        cout << "Data dengan nama " << keyword << " tidak ditemukan.\n";
+        cout << "Data dengan ID " << keyword << " tidak ditemukan.\n";
     }
     cout << "--------------------------------------------------\n\n";
     system("pause");
