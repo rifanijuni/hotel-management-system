@@ -10,6 +10,7 @@ struct Tamu {
     int lantai;
     int kamar;
     int lamaInap;
+    bool status;
 };
 
 string hotel[3][5] = {
@@ -18,19 +19,21 @@ string hotel[3][5] = {
     {"KOSONG","KOSONG","KOSONG","KOSONG","KOSONG"}
 };
 
-const int maxTamu = 15;
+const int maxTamu = 200;
 Tamu tamu[maxTamu];
 int jumlahTamu = 0;
 
 void header();
 void lihatKamar();
 void bookingKamar();
+void checkOutKamar();
 void cariTamu();
 void laporan();
 void loadFile();
 bool saveFile(Tamu* t);
+void rewriteFile();
 void totalPendapatan();
-int hitungBiaya(int hari, int harga);
+int hitungBiaya(int hari);
 void printData(Tamu* t);
 void bubbleSort();
 string spasiToUnderscore(string teks);
@@ -52,12 +55,13 @@ int main() {
 
         cout << "1. Lihat Status Kamar\n"
              << "2. Booking Kamar\n"
-             << "3. Cari Data Tamu\n"
-             << "4. Laporan Data Tamu (Sorting)\n"
-             << "5. Hitung Total Pendapatan\n"
-             << "6. Keluar Aplikasi\n"
+             << "3. Check Out Kamar\n"
+             << "4. Cari Data Tamu\n"
+             << "5. Laporan Data Tamu (Sorting)\n"
+             << "6. Hitung Total Pendapatan\n"
+             << "7. Keluar Aplikasi\n"
              << "===================================================\n"
-             << "Pilih menu [1-6] : ";
+             << "Pilih menu [1-7] : ";
 
         cin >> pilih;
 
@@ -69,21 +73,23 @@ int main() {
                 bookingKamar();
                 break;
             case 3 :
-                cariTamu();
+                checkOutKamar();
                 break;
             case 4 :
-                laporan();
+                cariTamu();
                 break;
             case 5 :
-                totalPendapatan();
+                laporan();
                 break;
             case 6 :
+                totalPendapatan();
+                break;
+            case 7 :
                 cout << "Apakah anda yakin ingin keluar? (y/n) : ";
                 cin >> out;
                 if (out == 'y' || out == 'Y') {
                     cout << "Terima kasih telah menggunakan program!\n";
                     keluar = true;
-                    system("pause");
                 }
                 break;
             default :
@@ -144,13 +150,15 @@ int getIndexKamar(char huruf) {
 
 void printData(Tamu* t) {
     char noKamar = getAbjadKamar(t->kamar);
+    string status = (t->status) ? "Aktif/Menginap" : "Sudah Check Out";
 
     cout << "--------------------------------------------------\n"
 		<< "ID          : " << t->id << "\n"
 		<< "Nama        : " << t->nama << "\n"
         << "Lantai      : " << t->lantai + 1 << "\n"
         << "Kamar       : " << noKamar << "\n"
-        << "Lama Inap   : " << t->lamaInap << "\n";
+        << "Lama Inap   : " << t->lamaInap << "\n"
+        << "Status      : " << status << "\n";
 }
 
 void lihatKamar(){
@@ -216,6 +224,7 @@ void bookingKamar(){
     }while (kamarValid == false);
     
     cout << "Lama Inap : "; cin >> inputTamu.lamaInap;
+    inputTamu.status = true;
 
     if (saveFile(&inputTamu) == true) {
         tamu[jumlahTamu] = inputTamu;
@@ -224,6 +233,60 @@ void bookingKamar(){
         cout << "Berhasil booking kamar\n";
     } else {
         cout << "Gagal booking kamar\n";
+    }
+
+    cout << "--------------------------------------------------\n\n";
+    system("pause");
+}
+
+/**
+ * Update Data
+ */
+void checkOutKamar() {
+    header();
+    cout << "\n----------------- Check Out Kamar -----------------\n\n";
+
+    if (jumlahTamu == 0) {
+        cout << "Data tamu kosong. Tidak ada yang bisa dicheckout.\n";
+        system("pause");
+        return;
+    }
+
+    int id;
+    cout << "Masukkan ID Tamu : ";
+    cin >> id;
+
+    bool ditemukan = false;
+    for (int i = 0; i < jumlahTamu; i++) {
+        if (tamu[i].id == id) {
+            ditemukan = true;
+            if (!tamu[i].status) {
+                cout << "Tamu dengan ID " << id << " sudah check out.\n";
+            } else {
+                int tagihan = hitungBiaya(tamu[i].lamaInap);
+
+                cout << "\n===================================================\n";
+                cout << "                 INVOICE CHECK OUT                 \n";
+                cout << "===================================================\n";
+                cout << "ID          : " << tamu[i].id << "\n";
+                cout << "Nama        : " << tamu[i].nama << "\n";
+                cout << "Kamar       : " << tamu[i].lantai + 1 << getAbjadKamar(tamu[i].kamar) << "\n";
+                cout << "Lama Inap   : " << tamu[i].lamaInap << " malam\n";
+                cout << "Total Biaya : Rp " << tagihan << "\n";
+                cout << "===================================================\n";
+
+                tamu[i].status = false; 
+                hotel[tamu[i].lantai][tamu[i].kamar] = "KOSONG"; 
+                rewriteFile(); 
+                
+                cout << "\nCheck Out Berhasil! Kamar sudah dikosongkan.\n";
+            }
+            break;
+        }
+    }
+
+    if (!ditemukan) {
+        cout << "Tamu dengan ID " << id << " tidak ditemukan.\n";
     }
 
     cout << "--------------------------------------------------\n\n";
@@ -304,11 +367,12 @@ void bubbleSort() {
 /**
  * Rekursif hitung pendapatan
  */
-int hitungBiaya(int hari, int harga) {
+int hitungBiaya(int hari) {
+    int harga = 300000;
     if(hari <= 0)
         return 0;
 
-    return harga + hitungBiaya(hari - 1, harga);
+    return harga + hitungBiaya(hari - 1);
 }
 
 void totalPendapatan() {
@@ -321,14 +385,13 @@ void totalPendapatan() {
         return;
     }
 
-    int hargaPerMalam = 300000;
     int total = 0;
 
     cout << "Rincian pendapatan per tamu:\n";
     cout << "--------------------------------------------------\n";
 
     for(int i = 0; i < jumlahTamu; i++) {
-        int biayaTamu = hitungBiaya(tamu[i].lamaInap, hargaPerMalam);
+        int biayaTamu = hitungBiaya(tamu[i].lamaInap);
         total += biayaTamu;
 
         cout << i + 1 << ". " 
@@ -337,7 +400,7 @@ void totalPendapatan() {
     }
 
     cout << "--------------------------------------------------\n";
-    cout << "Total Tamu : " << jumlahTamu << " orang" << endl;
+    cout << "Total Tamu       : " << jumlahTamu << " orang" << endl;
     cout << "Total Pendapatan : Rp " << total << endl;
     cout << "Rata-rata/Tamu   : Rp " << (total / jumlahTamu) << endl;
     cout << "--------------------------------------------------\n\n";
@@ -349,12 +412,15 @@ void totalPendapatan() {
  */
 void loadFile() {
     ifstream file("data_tamu.txt");
-	if (file.is_open()){
-		cout << "File ditemukan. Memuat data...\n";
-		while (jumlahTamu < maxTamu && file >> tamu[jumlahTamu].id >> tamu[jumlahTamu].nama >> tamu[jumlahTamu].lantai >> tamu[jumlahTamu].kamar >> tamu[jumlahTamu].lamaInap) {
+    if (file.is_open()){
+        cout << "File ditemukan. Memuat data...\n";
+        while (jumlahTamu < maxTamu && file >> tamu[jumlahTamu].id >> tamu[jumlahTamu].nama >> tamu[jumlahTamu].lantai >> tamu[jumlahTamu].kamar >> tamu[jumlahTamu].lamaInap >> tamu[jumlahTamu].status) {
             
             tamu[jumlahTamu].nama = underscoreToSpasi(tamu[jumlahTamu].nama);
-            hotel[tamu[jumlahTamu].lantai][tamu[jumlahTamu].kamar] = "TERISI";
+            
+            if (tamu[jumlahTamu].status) {
+                hotel[tamu[jumlahTamu].lantai][tamu[jumlahTamu].kamar] = "TERISI";
+            }
             
             jumlahTamu++;
         }
@@ -372,12 +438,30 @@ bool saveFile(Tamu* t) {
 		return false;
 	} else {
         file << t->id << " "
-            << spasiToUnderscore(t->nama) << " "
-            << t->lantai << " "
-            << t->kamar << " "
-            << t->lamaInap
-            << endl;
+             << spasiToUnderscore(t->nama) << " "
+             << t->lantai << " "
+             << t->kamar << " "
+             << t->lamaInap << " "
+             << t->status
+             << endl;
         file.close();
         return true;
+    }
+}
+
+void rewriteFile() {
+    ofstream file("data_tamu.txt", ios::trunc); 
+
+    if(file.is_open()){
+        for (int i = 0; i < jumlahTamu; i++) {
+            file << tamu[i].id << " "
+                 << spasiToUnderscore(tamu[i].nama) << " "
+                 << tamu[i].lantai << " "
+                 << tamu[i].kamar << " "
+                 << tamu[i].lamaInap << " "
+                 << tamu[i].status
+                 << endl;
+        }
+        file.close();
     }
 }
