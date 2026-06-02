@@ -148,7 +148,7 @@ void printData(Tamu* t) {
     cout << "--------------------------------------------------\n"
 		<< "ID          : " << t->id << "\n"
 		<< "Nama        : " << t->nama << "\n"
-        << "Lantai      : " << t->lantai << "\n"
+        << "Lantai      : " << t->lantai + 1 << "\n"
         << "Kamar       : " << noKamar << "\n"
         << "Lama Inap   : " << t->lamaInap << "\n";
 }
