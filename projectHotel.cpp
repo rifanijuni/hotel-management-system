@@ -306,27 +306,85 @@ void cariTamu(){
 
     if (jumlahTamu == 0) {
         cout << "Data tamu kosong. Tidak ada data yang bisa dicari. Silakan booking kamar\n";
+        system("pause");
         return;
     }
     
-	int keyword;
-	cout << "Masukkan ID :"; 
-    cin >> keyword;
-	
-	cout << "\nHasil Pencarian:\n";
-	
-	bool ditemukan = false;
-    for (int i = 0; i < jumlahTamu; i++) {
-        if (tamu[i].id == keyword) {
-            cout << "\nData Ditemukan!\n";
-            printData(&tamu[i]);
-            ditemukan = true;
-            break;
+    int cari;
+    cout << "Pilih kategori pencarian:\n"
+        << "1. ID\n"
+        << "2. Nama\n"
+        << "3. Kamar\n"
+        << "4. Terakhir Booking\n"
+        << "Pilih menu [1-4] : ";
+    cin >> cari;
+
+    bool ditemukan = false;
+    cout << "\nHasil Pencarian:\n";
+
+    if (cari == 1) { // binary search
+        int keyword;
+        cout << "Masukkan ID : "; 
+        cin >> keyword;
+        
+        bubbleSort(); 
+
+        int awal = 0;
+        int akhir = jumlahTamu - 1;
+        int tengah;
+
+        while (awal <= akhir) {
+            tengah = (awal + akhir) / 2;
+            
+            if (tamu[tengah].id == keyword) {
+                printData(&tamu[tengah]);
+                ditemukan = true;
+                break; 
+            } else if (tamu[tengah].id < keyword) {
+                awal = tengah + 1;
+            } else {
+                akhir = tengah - 1;
+            }
         }
+    } else if (cari == 2) { // linear search
+        string keyword;
+        cout << "Masukkan Nama : "; 
+        cin.ignore();
+        getline(cin, keyword);
+        string upperKeyword = stringToupper(keyword);
+        for (int i = 0; i < jumlahTamu; i++) {
+            if (stringToupper(tamu[i].nama) == upperKeyword) {
+                printData(&tamu[i]);
+                ditemukan = true;
+            }
+        }
+    } else if (cari == 3) { // linear search
+        string keyword;
+        cout << "Masukkan Nomor Kamar (Contoh: 1A) : "; 
+        cin >> keyword;
+        if (keyword.length() == 2) {
+            int lantaiCari = keyword[0] - '1';
+            int kamarCari = getIndexKamar(keyword[1]);
+            for (int i = 0; i < jumlahTamu; i++) {
+                if (tamu[i].lantai == lantaiCari && tamu[i].kamar == kamarCari) {
+                    printData(&tamu[i]);
+                    ditemukan = true;
+                }
+            }
+        } else {
+            cout << "Format kamar salah!\n";
+        }
+    } else if (cari == 4) {
+        printData(&tamu[jumlahTamu - 1]);
+        ditemukan = true;
+    } else {
+        cout << "Pilihan tidak valid!\n";
     }
-    if (!ditemukan) {
-        cout << "Data dengan ID " << keyword << " tidak ditemukan.\n";
+
+    if (!ditemukan && cari >= 1 && cari <= 4) {
+        cout << "Data tidak ditemukan.\n";
     }
+    
     cout << "--------------------------------------------------\n\n";
     system("pause");
 }
@@ -344,13 +402,38 @@ void laporan(){
         return;
     }
 
+    int filter;
+    cout << "Pilih filter laporan:\n"
+        << "1. Tamu Aktif\n"
+        << "2. Tamu Check Out\n"
+        << "3. Semua Tamu\n"
+        << "Pilih filter [1-3] : ";
+    cin >> filter;
+
     bubbleSort();
+    
+    int count = 0;
+    cout << "\n";
+    
     for (int i = 0; i < jumlahTamu; i++) {
-        printData(&tamu[i]);
+        if (filter == 1 && tamu[i].status == true) {
+            printData(&tamu[i]);
+            count++;
+        } else if (filter == 2 && tamu[i].status == false) {
+            printData(&tamu[i]);
+            count++;
+        } else if (filter == 3) {
+            printData(&tamu[i]);
+            count++;
+        }
+    }
+
+    if (filter < 1 || filter > 3) {
+        cout << "Pilihan tidak valid!\n";
     }
 
     cout << "--------------------------------------------------\n";
-    cout << "Total Tamu : " << jumlahTamu << " orang" << endl;
+    cout << "Total Tamu Ditampilkan : " << count << " orang" << endl;
     cout << "--------------------------------------------------\n\n";
     system("pause");
 }
