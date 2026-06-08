@@ -13,15 +13,11 @@ struct Tamu {
     bool status;
 };
 
-string hotel[3][5] = {
-    {"KOSONG","KOSONG","KOSONG","KOSONG","KOSONG"},
-    {"KOSONG","KOSONG","KOSONG","KOSONG","KOSONG"},
-    {"KOSONG","KOSONG","KOSONG","KOSONG","KOSONG"}
-};
-
+bool hotel[3][5] = {0};
 const int maxTamu = 200;
 Tamu tamu[maxTamu];
 int jumlahTamu = 0;
+int nextId = 1;
 
 void header();
 void lihatKamar();
@@ -165,9 +161,11 @@ void lihatKamar(){
     header();
     cout << "\n------------------- Lihat Kamar -------------------\n\n";
 
+    string statusKamar;
     for (int i = 0; i < 3; i++){
         for (int j = 0; j < 5; j++){
-            cout << "[Kamar " << i+1 << getAbjadKamar(j) << " " << hotel[i][j] << "]";
+            statusKamar = hotel[i][j] ? "TERISI" : "KOSONG";
+            cout << "[Kamar " << i+1 << getAbjadKamar(j) << " " << statusKamar << "]";
         }
         cout << endl;
     }
@@ -195,21 +193,12 @@ void bookingKamar(){
     cout << "Data tamu :\n";
     cout << "--------------------------------------------------\n";
 
-    bool idDuplikat;
-    do {
-        idDuplikat = false;
-        cout << "ID : "; cin >> inputTamu.id;
-        
-        for(int i = 0; i < jumlahTamu; i++) {
-            if(tamu[i].id == inputTamu.id) {
-                cout << "Maaf, ID " << inputTamu.id << " sudah terdaftar! Silakan input ID lain.\n";
-                idDuplikat = true;
-                break; 
-            }
-        }
-    } while (idDuplikat == true);
+    inputTamu.id = nextId; 
+    cout << "ID : " << inputTamu.id << " (Otomatis)\n";
 
-    cout << "Nama : "; cin.ignore(); getline(cin, inputTamu.nama); 
+    cout << "Nama : "; 
+    cin.ignore(); 
+    getline(cin, inputTamu.nama); 
     
     bool kamarValid = false;
     do {
@@ -229,7 +218,7 @@ void bookingKamar(){
             continue;
         }
 
-        if (hotel[inputTamu.lantai][inputTamu.kamar] == "TERISI") {
+        if (hotel[inputTamu.lantai][inputTamu.kamar] == true) {
             cout << "Kamar " << noKamar << " sudah terisi! Silakan pilih yang kosong.\n";
             continue;
         }
@@ -242,8 +231,9 @@ void bookingKamar(){
 
     if (saveFile(&inputTamu) == true) {
         tamu[jumlahTamu] = inputTamu;
-        hotel[inputTamu.lantai][inputTamu.kamar] = "TERISI";
+        hotel[inputTamu.lantai][inputTamu.kamar] = 1;
         jumlahTamu++;
+        nextId++;
         cout << "Berhasil booking kamar\n";
     } else {
         cout << "Gagal booking kamar\n";
@@ -290,7 +280,7 @@ void checkOutKamar() {
                 cout << "===================================================\n";
 
                 tamu[i].status = false; 
-                hotel[tamu[i].lantai][tamu[i].kamar] = "KOSONG"; 
+                hotel[tamu[i].lantai][tamu[i].kamar] = 0; 
                 rewriteFile(); 
                 
                 cout << "\nCheck Out Berhasil! Kamar sudah dikosongkan.\n";
@@ -427,16 +417,22 @@ void loadFile() {
     ifstream file("data_tamu.txt");
     if (file.is_open()){
         cout << "File ditemukan. Memuat data...\n";
+        int maxId = 0;
         while (jumlahTamu < maxTamu && file >> tamu[jumlahTamu].id >> tamu[jumlahTamu].nama >> tamu[jumlahTamu].lantai >> tamu[jumlahTamu].kamar >> tamu[jumlahTamu].lamaInap >> tamu[jumlahTamu].status) {
             
             tamu[jumlahTamu].nama = underscoreToSpasi(tamu[jumlahTamu].nama);
             
             if (tamu[jumlahTamu].status) {
-                hotel[tamu[jumlahTamu].lantai][tamu[jumlahTamu].kamar] = "TERISI";
+                hotel[tamu[jumlahTamu].lantai][tamu[jumlahTamu].kamar] = 1;
             }
             
+            if (tamu[jumlahTamu].id > maxId) {
+                maxId = tamu[jumlahTamu].id;
+            }
+
             jumlahTamu++;
         }
+        nextId = maxId + 1;
 		file.close();
 	} else {
 		cout << "File tidak ditemukan! Memulai program dengan data kosong\n";
